@@ -31,12 +31,13 @@ RoleBasedAccessControlEngineImpl::RoleBasedAccessControlEngineImpl(
 
 bool RoleBasedAccessControlEngineImpl::allowed(const Network::Connection& connection,
                                                const Envoy::Http::HeaderMap& headers,
-                                               bool isdarklaunch) const {
+                                               EnforcementMode mode) const {
   if (engine_disabled_) {
     return true;
   }
 
-  std::vector<PolicyMatcher> policies = isdarklaunch ? darklaunch_policies_ : policies_;
+  const std::vector<PolicyMatcher>& policies =
+      mode == EnforcementMode::DARKLAUNCH ? darklaunch_policies_ : policies_;
   bool matched = false;
   for (const auto& policy : policies) {
     if (policy.matches(connection, headers)) {

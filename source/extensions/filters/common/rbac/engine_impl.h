@@ -19,7 +19,7 @@ public:
       const envoy::config::filter::http::rbac::v2::RBACPerRoute& per_route_config);
 
   bool allowed(const Network::Connection& connection, const Envoy::Http::HeaderMap& headers,
-               bool isdarklaunch) const override;
+               EnforcementMode mode) const override;
 
 private:
   // Indicates that the engine will not evaluate an action and just return true for calls to

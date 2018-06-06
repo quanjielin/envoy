@@ -15,8 +15,8 @@ public:
   MockEngine();
   virtual ~MockEngine();
 
-  MOCK_CONST_METHOD3(allowed,
-                     bool(const Envoy::Network::Connection&, const Envoy::Http::HeaderMap&, bool));
+  MOCK_CONST_METHOD3(allowed, bool(const Envoy::Network::Connection&, const Envoy::Http::HeaderMap&,
+                                   EnforcementMode));
 };
 
 } // namespace RBAC

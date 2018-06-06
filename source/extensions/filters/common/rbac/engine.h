@@ -10,6 +10,8 @@ namespace Filters {
 namespace Common {
 namespace RBAC {
 
+enum class EnforcementMode { ENFORCED, DARKLAUNCH };
+
 /**
  * Shared logic for evaluating RBAC policies.
  */
@@ -25,7 +27,7 @@ public:
    *                   empty map should be used if there are no headers available.
    */
   virtual bool allowed(const Network::Connection& connection, const Envoy::Http::HeaderMap& headers,
-                       bool isdarklaunch) const PURE;
+                       EnforcementMode mode) const PURE;
 };
 
 } // namespace RBAC
