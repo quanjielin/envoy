@@ -15,13 +15,6 @@ namespace HttpFilters {
 namespace RBACFilter {
 namespace {
 
-TEST(RoleBasedAccessControlFilterConfigFactoryTest, ValidateFail) {
-  NiceMock<Server::Configuration::MockFactoryContext> context;
-  EXPECT_THROW(RoleBasedAccessControlFilterConfigFactory().createFilterFactoryFromProto(
-                   envoy::config::filter::http::rbac::v2::RBAC(), "stats", context),
-               ProtoValidationException);
-}
-
 TEST(RoleBasedAccessControlFilterConfigFactoryTest, ValidProto) {
   envoy::config::rbac::v2alpha::Policy policy;
   policy.add_permissions()->set_any(true);

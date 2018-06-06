@@ -8,22 +8,7 @@ namespace RBAC {
 
 RoleBasedAccessControlEngineImpl::RoleBasedAccessControlEngineImpl(
     const envoy::config::filter::http::rbac::v2::RBAC& config, bool disabled)
-    : engine_disabled_(disabled),
-      allowed_if_matched_(disabled ||
-                          config.rules().action() ==
-                              envoy::config::rbac::v2alpha::RBAC_Action::RBAC_Action_ALLOW) {
-  if (disabled) {
-    return;
-  }
-
-  for (const auto& policy : config.rules().policies()) {
-    policies_.emplace_back(policy.second);
-  }
-
-  for (const auto& policy : config.permissive_rules().policies()) {
-    permissive_policies_.emplace_back(policy.second);
-  }
-}
+    : engine_disabled_(disabled), config_(config) {}
 
 RoleBasedAccessControlEngineImpl::RoleBasedAccessControlEngineImpl(
     const envoy::config::filter::http::rbac::v2::RBACPerRoute& per_route_config)
@@ -36,8 +21,34 @@ bool RoleBasedAccessControlEngineImpl::allowed(const Network::Connection& connec
     return true;
   }
 
-  const std::vector<PolicyMatcher>& policies =
-      mode == EnforcementMode::PERMISSIVE ? permissive_policies_ : policies_;
+  std::vector<PolicyMatcher> policies;
+  bool allowed_if_matched;
+  if (mode == EnforcementMode::ENFORCED) {
+    // No enforced rule is set indicates RBAC isn't enabled for enforcement mode.
+    if (!config_.has_rules()) {
+      return true;
+    }
+
+    for (const auto& policy : config_.rules().policies()) {
+      policies.emplace_back(policy.second);
+    }
+
+    allowed_if_matched =
+        config_.rules().action() == envoy::config::rbac::v2alpha::RBAC_Action::RBAC_Action_ALLOW;
+  } else {
+    // No permissive rule is set indicates RBAC isn't enabled for permissive mode.
+    if (!config_.has_permissive_rules()) {
+      return true;
+    }
+
+    for (const auto& policy : config_.permissive_rules().policies()) {
+      policies.emplace_back(policy.second);
+    }
+
+    allowed_if_matched = config_.permissive_rules().action() ==
+                         envoy::config::rbac::v2alpha::RBAC_Action::RBAC_Action_ALLOW;
+  }
+
   bool matched = false;
   for (const auto& policy : policies) {
     if (policy.matches(connection, headers)) {
@@ -49,7 +60,7 @@ bool RoleBasedAccessControlEngineImpl::allowed(const Network::Connection& connec
   // only allowed if:
   //   - matched and ALLOW action
   //   - not matched and DENY action
-  return matched == allowed_if_matched_;
+  return matched == allowed_if_matched;
 }
 
 } // namespace RBAC

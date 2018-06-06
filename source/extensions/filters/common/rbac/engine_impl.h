@@ -26,12 +26,8 @@ private:
   // allowed. This value is only set by route-local configuration.
   const bool engine_disabled_;
 
-  // Indicates the behavior to take if a policy matches an action.
-  const bool allowed_if_matched_;
-
-  std::vector<PolicyMatcher> policies_;
-
-  std::vector<PolicyMatcher> permissive_policies_;
+  // RBAC Configuration.
+  const envoy::config::filter::http::rbac::v2::RBAC config_;
 };
 
 } // namespace RBAC

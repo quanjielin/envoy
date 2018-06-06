@@ -13,9 +13,11 @@ import "gogoproto/gogo.proto";
 
 message RBAC {
   // Specify the enforcement mode RBAC rules to be applied globally.
-  config.rbac.v2alpha.RBAC rules = 1 [(validate.rules).message.required = true];
+  // Disable the filter for enforcement mode if rules isn't set.
+  config.rbac.v2alpha.RBAC rules = 1;
 
   // Specify the permissive mode RBAC rules to be applied globally.
+  // Disable the filter for permissive mode if permissive_rules isn't set.
   config.rbac.v2alpha.RBAC permissive_rules = 2;
 }
 
