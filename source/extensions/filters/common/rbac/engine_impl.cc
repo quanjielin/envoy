@@ -19,6 +19,10 @@ RoleBasedAccessControlEngineImpl::RoleBasedAccessControlEngineImpl(
   for (const auto& policy : config.rules().policies()) {
     policies_.emplace_back(policy.second);
   }
+
+  for (const auto& policy : config.darklaunch_rules().policies()) {
+    darklaunch_policies_.emplace_back(policy.second);
+  }
 }
 
 RoleBasedAccessControlEngineImpl::RoleBasedAccessControlEngineImpl(
@@ -26,13 +30,15 @@ RoleBasedAccessControlEngineImpl::RoleBasedAccessControlEngineImpl(
     : RoleBasedAccessControlEngineImpl(per_route_config.rbac(), per_route_config.disabled()) {}
 
 bool RoleBasedAccessControlEngineImpl::allowed(const Network::Connection& connection,
-                                               const Envoy::Http::HeaderMap& headers) const {
+                                               const Envoy::Http::HeaderMap& headers,
+                                               bool isdarklaunch) const {
   if (engine_disabled_) {
     return true;
   }
 
+  std::vector<PolicyMatcher> policies = isdarklaunch ? darklaunch_policies_ : policies_;
   bool matched = false;
-  for (const auto& policy : policies_) {
+  for (const auto& policy : policies) {
     if (policy.matches(connection, headers)) {
       matched = true;
       break;

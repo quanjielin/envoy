@@ -22,8 +22,9 @@ namespace {
 
 void checkEngine(const RBAC::RoleBasedAccessControlEngineImpl& engine, bool expected,
                  const Envoy::Network::Connection& connection = Envoy::Network::MockConnection(),
-                 const Envoy::Http::HeaderMap& headers = Envoy::Http::HeaderMapImpl()) {
-  EXPECT_EQ(expected, engine.allowed(connection, headers));
+                 const Envoy::Http::HeaderMap& headers = Envoy::Http::HeaderMapImpl(),
+                 bool isDarkLaunch = false) {
+  EXPECT_EQ(expected, engine.allowed(connection, headers, isDarkLaunch));
 }
 
 TEST(RoleBasedAccessControlEngineImpl, Disabled) {
