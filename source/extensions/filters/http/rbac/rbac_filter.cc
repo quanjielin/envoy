@@ -45,10 +45,10 @@ Http::FilterHeadersStatus RoleBasedAccessControlFilter::decodeHeaders(Http::Head
       config_->engine(callbacks_->route());
 
   if (engine.allowed(*callbacks_->connection(), headers,
-                     Filters::Common::RBAC::EnforcementMode::DARKLAUNCH)) {
-    config_->stats().darklaunch_allowed_.inc();
+                     Filters::Common::RBAC::EnforcementMode::PERMISSIVE)) {
+    config_->stats().permissive_allowed_.inc();
   } else {
-    config_->stats().darklaunch_denied_.inc();
+    config_->stats().permissive_denied_.inc();
   }
 
   if (engine.allowed(*callbacks_->connection(), headers,

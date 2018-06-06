@@ -10,7 +10,7 @@ namespace Filters {
 namespace Common {
 namespace RBAC {
 
-enum class EnforcementMode { ENFORCED, DARKLAUNCH };
+enum class EnforcementMode { ENFORCED, PERMISSIVE };
 
 /**
  * Shared logic for evaluating RBAC policies.

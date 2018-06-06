@@ -20,8 +20,8 @@ RoleBasedAccessControlEngineImpl::RoleBasedAccessControlEngineImpl(
     policies_.emplace_back(policy.second);
   }
 
-  for (const auto& policy : config.darklaunch_rules().policies()) {
-    darklaunch_policies_.emplace_back(policy.second);
+  for (const auto& policy : config.permissive_rules().policies()) {
+    permissive_policies_.emplace_back(policy.second);
   }
 }
 
@@ -37,7 +37,7 @@ bool RoleBasedAccessControlEngineImpl::allowed(const Network::Connection& connec
   }
 
   const std::vector<PolicyMatcher>& policies =
-      mode == EnforcementMode::DARKLAUNCH ? darklaunch_policies_ : policies_;
+      mode == EnforcementMode::PERMISSIVE ? permissive_policies_ : policies_;
   bool matched = false;
   for (const auto& policy : policies) {
     if (policy.matches(connection, headers)) {

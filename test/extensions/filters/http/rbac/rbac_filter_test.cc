@@ -32,11 +32,11 @@ public:
     config.mutable_rules()->set_action(envoy::config::rbac::v2alpha::RBAC::ALLOW);
     (*config.mutable_rules()->mutable_policies())["foo"] = policy;
 
-    envoy::config::rbac::v2alpha::Policy darklaunch_policy;
-    darklaunch_policy.add_permissions()->set_destination_port(456);
-    darklaunch_policy.add_principals()->set_any(true);
-    config.mutable_darklaunch_rules()->set_action(envoy::config::rbac::v2alpha::RBAC::ALLOW);
-    (*config.mutable_darklaunch_rules()->mutable_policies())["bar"] = darklaunch_policy;
+    envoy::config::rbac::v2alpha::Policy permissive_policy;
+    permissive_policy.add_permissions()->set_destination_port(456);
+    permissive_policy.add_principals()->set_any(true);
+    config.mutable_permissive_rules()->set_action(envoy::config::rbac::v2alpha::RBAC::ALLOW);
+    (*config.mutable_permissive_rules()->mutable_policies())["bar"] = permissive_policy;
 
     return std::make_shared<RoleBasedAccessControlFilterConfig>(config, "test", store_);
   }
@@ -71,7 +71,7 @@ TEST_F(RoleBasedAccessControlFilterTest, Allowed) {
 
   EXPECT_EQ(Http::FilterHeadersStatus::Continue, filter_.decodeHeaders(headers_, false));
   EXPECT_EQ(1U, config_->stats().allowed_.value());
-  EXPECT_EQ(1U, config_->stats().darklaunch_denied_.value());
+  EXPECT_EQ(1U, config_->stats().permissive_denied_.value());
 
   Buffer::OwnedImpl data("");
   EXPECT_EQ(Http::FilterDataStatus::Continue, filter_.decodeData(data, false));
@@ -91,7 +91,7 @@ TEST_F(RoleBasedAccessControlFilterTest, Denied) {
 
   EXPECT_EQ(Http::FilterHeadersStatus::StopIteration, filter_.decodeHeaders(headers_, true));
   EXPECT_EQ(1U, config_->stats().denied_.value());
-  EXPECT_EQ(1U, config_->stats().darklaunch_allowed_.value());
+  EXPECT_EQ(1U, config_->stats().permissive_allowed_.value());
 }
 
 TEST_F(RoleBasedAccessControlFilterTest, RouteLocalOverride) {

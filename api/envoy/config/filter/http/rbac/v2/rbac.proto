@@ -15,8 +15,8 @@ message RBAC {
   // Specify the enforcement mode RBAC rules to be applied globally.
   config.rbac.v2alpha.RBAC rules = 1 [(validate.rules).message.required = true];
 
-  // Specify the dark launch mode RBAC rules to be applied globally.
-  config.rbac.v2alpha.RBAC darklaunch_rules = 2;
+  // Specify the permissive mode RBAC rules to be applied globally.
+  config.rbac.v2alpha.RBAC permissive_rules = 2;
 }
 
 message RBACPerRoute {

@@ -31,7 +31,7 @@ private:
 
   std::vector<PolicyMatcher> policies_;
 
-  std::vector<PolicyMatcher> darklaunch_policies_;
+  std::vector<PolicyMatcher> permissive_policies_;
 };
 
 } // namespace RBAC
