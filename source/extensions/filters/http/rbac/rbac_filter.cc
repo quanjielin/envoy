@@ -14,7 +14,7 @@ RoleBasedAccessControlFilterConfig::RoleBasedAccessControlFilterConfig(
     const envoy::config::filter::http::rbac::v2::RBAC& proto_config,
     const std::string& stats_prefix, Stats::Scope& scope)
     : stats_(RoleBasedAccessControlFilter::generateStats(stats_prefix, scope)),
-      engine_(proto_config, false) {}
+      engine_(proto_config, false), config_(proto_config) {}
 
 RoleBasedAccessControlFilterStats
 RoleBasedAccessControlFilter::generateStats(const std::string& prefix, Stats::Scope& scope) {
@@ -44,11 +44,13 @@ Http::FilterHeadersStatus RoleBasedAccessControlFilter::decodeHeaders(Http::Head
   const Filters::Common::RBAC::RoleBasedAccessControlEngine& engine =
       config_->engine(callbacks_->route());
 
-  if (engine.allowed(*callbacks_->connection(), headers,
-                     Filters::Common::RBAC::EnforcementMode::PERMISSIVE)) {
-    config_->stats().permissive_allowed_.inc();
-  } else {
-    config_->stats().permissive_denied_.inc();
+  if (config_->config().has_permissive_rules()) {
+    if (engine.allowed(*callbacks_->connection(), headers,
+                       Filters::Common::RBAC::EnforcementMode::PERMISSIVE)) {
+      config_->stats().permissive_allowed_.inc();
+    } else {
+      config_->stats().permissive_denied_.inc();
+    }
   }
 
   if (engine.allowed(*callbacks_->connection(), headers,

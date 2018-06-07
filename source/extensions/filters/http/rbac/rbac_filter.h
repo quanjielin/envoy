@@ -41,6 +41,7 @@ public:
       const std::string& stats_prefix, Stats::Scope& scope);
 
   RoleBasedAccessControlFilterStats& stats() { return stats_; }
+  const envoy::config::filter::http::rbac::v2::RBAC& config() { return config_; }
 
   const Filters::Common::RBAC::RoleBasedAccessControlEngine&
   engine(const Router::RouteConstSharedPtr route) const;
@@ -48,6 +49,7 @@ public:
 private:
   RoleBasedAccessControlFilterStats stats_;
   const Filters::Common::RBAC::RoleBasedAccessControlEngineImpl engine_;
+  const envoy::config::filter::http::rbac::v2::RBAC config_;
 };
 
 typedef std::shared_ptr<RoleBasedAccessControlFilterConfig>
