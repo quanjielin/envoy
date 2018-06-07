@@ -51,10 +51,6 @@ TEST(RoleBasedAccessControlFilterConfigFactoryTest, RouteSpecificConfig) {
   ProtobufTypes::MessagePtr proto_config = factory.createEmptyRouteConfigProto();
   EXPECT_TRUE(proto_config.get());
 
-  auto& cfg =
-      dynamic_cast<envoy::config::filter::http::rbac::v2::RBACPerRoute&>(*proto_config.get());
-  cfg.set_disabled(true);
-
   Router::RouteSpecificFilterConfigConstSharedPtr route_config =
       factory.createRouteSpecificFilterConfig(*proto_config, context);
   EXPECT_TRUE(route_config.get());

@@ -22,13 +22,6 @@ message RBAC {
 }
 
 message RBACPerRoute {
-  oneof override {
-    option (validate.required) = true;
-
-    // Disable the filter for this particular vhost or route.
-    bool disabled = 1 [(validate.rules).bool.const = true];
-
-    // Override the global configuration of the filter with this new config.
-    RBAC rbac = 2 [(validate.rules).message.required = true];
-  }
+  // Override the global configuration of the filter with this new config.
+  RBAC rbac = 1;
 }

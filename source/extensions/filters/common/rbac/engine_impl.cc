@@ -7,11 +7,8 @@ namespace Common {
 namespace RBAC {
 
 RoleBasedAccessControlEngineImpl::RoleBasedAccessControlEngineImpl(
-    const envoy::config::filter::http::rbac::v2::RBAC& config, bool disabled)
-    : engine_disabled_(disabled), config_(config) {
-  if (disabled) {
-    return;
-  }
+    const envoy::config::filter::http::rbac::v2::RBAC& config)
+    : config_(config) {
 
   for (const auto& policy : config.rules().policies()) {
     policies_.emplace_back(policy.second);
@@ -24,14 +21,11 @@ RoleBasedAccessControlEngineImpl::RoleBasedAccessControlEngineImpl(
 
 RoleBasedAccessControlEngineImpl::RoleBasedAccessControlEngineImpl(
     const envoy::config::filter::http::rbac::v2::RBACPerRoute& per_route_config)
-    : RoleBasedAccessControlEngineImpl(per_route_config.rbac(), per_route_config.disabled()) {}
+    : RoleBasedAccessControlEngineImpl(per_route_config.rbac()) {}
 
 bool RoleBasedAccessControlEngineImpl::allowed(const Network::Connection& connection,
                                                const Envoy::Http::HeaderMap& headers,
                                                EnforcementMode mode) const {
-  if (engine_disabled_) {
-    return true;
-  }
 
   // No enforced rule is set indicates RBAC isn't enabled for enforcement mode.
   if ((mode == EnforcementMode::ENFORCED) && !config_.has_rules()) {

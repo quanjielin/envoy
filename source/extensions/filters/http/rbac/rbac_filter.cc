@@ -14,7 +14,7 @@ RoleBasedAccessControlFilterConfig::RoleBasedAccessControlFilterConfig(
     const envoy::config::filter::http::rbac::v2::RBAC& proto_config,
     const std::string& stats_prefix, Stats::Scope& scope)
     : stats_(RoleBasedAccessControlFilter::generateStats(stats_prefix, scope)),
-      engine_(proto_config, false), config_(proto_config) {}
+      engine_(proto_config), config_(proto_config) {}
 
 RoleBasedAccessControlFilterStats
 RoleBasedAccessControlFilter::generateStats(const std::string& prefix, Stats::Scope& scope) {

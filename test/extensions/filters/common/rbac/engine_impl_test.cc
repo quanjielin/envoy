@@ -30,11 +30,10 @@ void checkEngine(const RBAC::RoleBasedAccessControlEngineImpl& engine, bool expe
 
 TEST(RoleBasedAccessControlEngineImpl, Disabled) {
   envoy::config::filter::http::rbac::v2::RBACPerRoute config;
-  config.set_disabled(true);
+  // config.set_disabled(true);
   checkEngine(RBAC::RoleBasedAccessControlEngineImpl(config), true);
-  checkEngine(
-      RBAC::RoleBasedAccessControlEngineImpl(envoy::config::filter::http::rbac::v2::RBAC(), true),
-      true);
+  checkEngine(RBAC::RoleBasedAccessControlEngineImpl(envoy::config::filter::http::rbac::v2::RBAC()),
+              true);
 }
 
 TEST(RoleBasedAccessControlEngineImpl, AllowedWhitelist) {
