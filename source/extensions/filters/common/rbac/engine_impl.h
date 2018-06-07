@@ -28,6 +28,10 @@ private:
 
   // RBAC Configuration.
   const envoy::config::filter::http::rbac::v2::RBAC config_;
+
+  std::vector<PolicyMatcher> policies_;
+
+  std::vector<PolicyMatcher> permissive_policies_;
 };
 
 } // namespace RBAC

@@ -8,7 +8,19 @@ namespace RBAC {
 
 RoleBasedAccessControlEngineImpl::RoleBasedAccessControlEngineImpl(
     const envoy::config::filter::http::rbac::v2::RBAC& config, bool disabled)
-    : engine_disabled_(disabled), config_(config) {}
+    : engine_disabled_(disabled), config_(config) {
+  if (disabled) {
+    return;
+  }
+
+  for (const auto& policy : config.rules().policies()) {
+    policies_.emplace_back(policy.second);
+  }
+
+  for (const auto& policy : config.permissive_rules().policies()) {
+    permissive_policies_.emplace_back(policy.second);
+  }
+}
 
 RoleBasedAccessControlEngineImpl::RoleBasedAccessControlEngineImpl(
     const envoy::config::filter::http::rbac::v2::RBACPerRoute& per_route_config)
@@ -21,33 +33,24 @@ bool RoleBasedAccessControlEngineImpl::allowed(const Network::Connection& connec
     return true;
   }
 
-  std::vector<PolicyMatcher> policies;
-  bool allowed_if_matched;
-  if (mode == EnforcementMode::ENFORCED) {
-    // No enforced rule is set indicates RBAC isn't enabled for enforcement mode.
-    if (!config_.has_rules()) {
-      return true;
-    }
-
-    for (const auto& policy : config_.rules().policies()) {
-      policies.emplace_back(policy.second);
-    }
-
-    allowed_if_matched =
-        config_.rules().action() == envoy::config::rbac::v2alpha::RBAC_Action::RBAC_Action_ALLOW;
-  } else {
-    // No permissive rule is set indicates RBAC isn't enabled for permissive mode.
-    if (!config_.has_permissive_rules()) {
-      return true;
-    }
-
-    for (const auto& policy : config_.permissive_rules().policies()) {
-      policies.emplace_back(policy.second);
-    }
-
-    allowed_if_matched = config_.permissive_rules().action() ==
-                         envoy::config::rbac::v2alpha::RBAC_Action::RBAC_Action_ALLOW;
+  // No enforced rule is set indicates RBAC isn't enabled for enforcement mode.
+  if ((mode == EnforcementMode::ENFORCED) && !config_.has_rules()) {
+    return true;
   }
+
+  // No permissive rule is set indicates RBAC isn't enabled for permissive mode.
+  if ((mode == EnforcementMode::PERMISSIVE) && !config_.has_permissive_rules()) {
+    return true;
+  }
+
+  const std::vector<PolicyMatcher>& policies =
+      mode == EnforcementMode::PERMISSIVE ? permissive_policies_ : policies_;
+
+  bool allowed_if_matched = mode == EnforcementMode::PERMISSIVE
+                                ? config_.permissive_rules().action() ==
+                                      envoy::config::rbac::v2alpha::RBAC_Action::RBAC_Action_ALLOW
+                                : config_.rules().action() ==
+                                      envoy::config::rbac::v2alpha::RBAC_Action::RBAC_Action_ALLOW;
 
   bool matched = false;
   for (const auto& policy : policies) {
