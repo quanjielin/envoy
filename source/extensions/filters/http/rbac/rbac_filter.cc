@@ -1,8 +1,10 @@
+#include <tcpd.h>
 #include "extensions/filters/http/rbac/rbac_filter.h"
 
 #include "common/http/utility.h"
 
 #include "extensions/filters/http/well_known_names.h"
+#include "common/config/metadata.h"
 
 namespace Envoy {
 namespace Extensions {
@@ -77,24 +79,52 @@ Http::FilterHeadersStatus RoleBasedAccessControlFilter::decodeHeaders(Http::Head
                 callbacks_->connection()->ssl()->subjectPeerCertificate()
           : "none",
       headers, callbacks_->requestInfo().dynamicMetadata().DebugString());
+  std::string effective_policyID;
   const absl::optional<Filters::Common::RBAC::RoleBasedAccessControlEngineImpl>& shadow_engine =
       config_->engine(callbacks_->route(), EnforcementMode::Shadow);
   if (shadow_engine.has_value()) {
+    std::string shadow_resp_code = "200";
     if (shadow_engine->allowed(*callbacks_->connection(), headers,
-                               callbacks_->requestInfo().dynamicMetadata())) {
+                               callbacks_->requestInfo().dynamicMetadata(),
+                               effective_policyID)) {
+      //std::cout << "-----policyID is " << effective_policyID << "\n";
       ENVOY_LOG(debug, "shadow allowed");
       config_->stats().shadow_allowed_.inc();
     } else {
       ENVOY_LOG(debug, "shadow denied");
       config_->stats().shadow_denied_.inc();
+      /*
+      callbacks_->requestInfo().setDynamicMetadata(
+          "shadow", MessageUtil::keyValueStruct("effective_policyID", effectivePolicyID));*/
+      shadow_resp_code = "403";
     }
+
+    auto filter_meta = callbacks_->requestInfo().dynamicMetadata().filter_metadata();
+    filter_meta["shadow"].MergeFrom(MessageUtil::keyValueStruct("effective_policyID", effective_policyID));
+    filter_meta["shadow"].MergeFrom(MessageUtil::keyValueStruct("response_code", shadow_resp_code));
+    auto fields = filter_meta["shadow"].fields();
+    for (auto it = fields.begin(); it != fields.end(); it++) {
+      std::cout << "-----first " << it->first << "\n";
+      std::cout << "-----second " << it->second.string_value() << "\n";
+    }
+
+    /*
+    callbacks_->requestInfo().setDynamicMetadata(
+        "shadow", MessageUtil::keyValueStruct("response_code", shadow_resp_code));
+    auto dy = callbacks_->requestInfo().dynamicMetadata();
+    auto dft = *(dy.mutable_filter_metadata());
+    auto fields2 = dft["shadow"].fields();
+    for (auto it = fields2.begin(); it != fields2.end(); it++) {
+      std::cout << "-----first " << (*it).first << "\n";
+    } */
   }
 
   const absl::optional<Filters::Common::RBAC::RoleBasedAccessControlEngineImpl>& engine =
       config_->engine(callbacks_->route(), EnforcementMode::Enforced);
   if (engine.has_value()) {
     if (engine->allowed(*callbacks_->connection(), headers,
-                        callbacks_->requestInfo().dynamicMetadata())) {
+                        callbacks_->requestInfo().dynamicMetadata(),
+                        effective_policyID)) {
       ENVOY_LOG(debug, "enforced allowed");
       config_->stats().allowed_.inc();
       return Http::FilterHeadersStatus::Continue;

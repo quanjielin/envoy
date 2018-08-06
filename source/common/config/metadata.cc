@@ -6,8 +6,14 @@ namespace Config {
 const ProtobufWkt::Value& Metadata::metadataValue(const envoy::api::v2::core::Metadata& metadata,
                                                   const std::string& filter,
                                                   const std::vector<std::string>& path) {
+  auto tf = metadata.filter_metadata().begin();
+  for(; tf!=metadata.filter_metadata().end(); tf++) {
+    std::cout << "*****metadataValue " << (*tf).first << "\n";
+  }
+
   const auto filter_it = metadata.filter_metadata().find(filter);
   if (filter_it == metadata.filter_metadata().end()) {
+    std::cout << "*****metadataValue end \n";
     return ProtobufWkt::Value::default_instance();
   }
   const ProtobufWkt::Struct* data_struct = &(filter_it->second);

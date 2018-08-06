@@ -1,3 +1,4 @@
+#include "common/config/metadata.h"
 #include "common/network/utility.h"
 
 #include "extensions/filters/http/rbac/rbac_filter.h"
@@ -43,6 +44,7 @@ public:
 
   void SetUp() {
     EXPECT_CALL(callbacks_, connection()).WillRepeatedly(Return(&connection_));
+    EXPECT_CALL(callbacks_, requestInfo()).WillRepeatedly(ReturnRef(req_info_));
     filter_.setDecoderFilterCallbacks(callbacks_);
   }
 
@@ -53,6 +55,7 @@ public:
 
   NiceMock<Http::MockStreamDecoderFilterCallbacks> callbacks_;
   NiceMock<Network::MockConnection> connection_{};
+  NiceMock<Envoy::RequestInfo::MockRequestInfo> req_info_;
   Stats::IsolatedStoreImpl store_;
   RoleBasedAccessControlFilterConfigSharedPtr config_;
 
@@ -87,6 +90,18 @@ TEST_F(RoleBasedAccessControlFilterTest, Denied) {
   EXPECT_EQ(Http::FilterHeadersStatus::StopIteration, filter_.decodeHeaders(headers_, true));
   EXPECT_EQ(1U, config_->stats().denied_.value());
   EXPECT_EQ(1U, config_->stats().shadow_allowed_.value());
+
+
+  auto filter_meta = callbacks_.request_info_.dynamicMetadata().filter_metadata();
+  auto fields = filter_meta["shadow"].fields();
+  for (auto it = fields.begin(); it != fields.end(); it++) {
+    std::cout << "++++++++first " << (*it).first << "\n";
+  }
+
+  auto nod = callbacks_.request_info_.dynamicMetadata();
+  EXPECT_EQ("200",
+            Config::Metadata::metadataValue(nod, "shadow", "response_code")
+                .string_value());
 }
 
 TEST_F(RoleBasedAccessControlFilterTest, RouteLocalOverride) {
@@ -98,7 +113,7 @@ TEST_F(RoleBasedAccessControlFilterTest, RouteLocalOverride) {
   NiceMock<Filters::Common::RBAC::MockEngine> engine{route_config.rbac().rules()};
   NiceMock<MockRoleBasedAccessControlRouteSpecificFilterConfig> per_route_config_{route_config};
 
-  EXPECT_CALL(engine, allowed(_, _, _)).WillRepeatedly(Return(true));
+  EXPECT_CALL(engine, allowed(_, _, _, _)).WillRepeatedly(Return(true));
   EXPECT_CALL(per_route_config_, engine()).WillRepeatedly(ReturnRef(engine));
 
   EXPECT_CALL(callbacks_.route_->route_entry_, perFilterConfig(HttpFilterNames::get().Rbac))

@@ -175,6 +175,7 @@ struct RequestInfoImpl : public RequestInfo {
   const envoy::api::v2::core::Metadata& dynamicMetadata() const override { return metadata_; };
 
   void setDynamicMetadata(const std::string& name, const ProtobufWkt::Struct& value) override {
+    std::cout << "------------setDynamicMetadata \n";
     (*metadata_.mutable_filter_metadata())[name].MergeFrom(value);
   };
 
